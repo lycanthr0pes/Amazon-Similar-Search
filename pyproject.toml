@@ -1,7 +1,7 @@
 [project]
 name = "advanced-b"
 version = "0.1.0"
-description = "Amazon特化型マルチモーダルEC商品検索システムの検証用プロジェクト"
+description = "Amazon類似検索"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
