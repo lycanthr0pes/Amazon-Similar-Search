@@ -1,7 +1,11 @@
 import json
-from pydantic import ValidationError
-from typing import Any
+import math
+import re
 from collections.abc import Sequence
+from typing import Any
+
+from pydantic import ValidationError
+
 from src.schemas import ProductAttributes
 
 LIST_FIELDS = (
@@ -18,10 +22,46 @@ LIST_FIELDS = (
     "related_terms_ja",
     "related_terms_en",
 )
+PRICE_FIELDS = (
+    "min_price_jpy",
+    "max_price_jpy",
+    "target_price_jpy",
+    "expected_price_min_jpy",
+    "expected_price_max_jpy",
+)
+PRICE_STRING_PATTERN = re.compile(
+    r"^\s*(?:JPY\s*)?[¥￥]?\s*([+-]?\d[\d,]*(?:\.\d+)?)\s*(?:円|JPY)?\s*$",
+    re.IGNORECASE,
+)
+BONSAI_RESPONSE_ERROR = "Bonsai response is not valid product JSON."
+
+
+def normalize_price_value(value: Any) -> int | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, int):
+        return value if value > 0 else None
+    if isinstance(value, float):
+        return int(value) if math.isfinite(value) and value.is_integer() and value > 0 else None
+    if not isinstance(value, str):
+        return None
+
+    match = PRICE_STRING_PATTERN.fullmatch(value)
+    if not match:
+        return None
+    try:
+        number = float(match.group(1).replace(",", ""))
+    except ValueError:
+        return None
+    if not math.isfinite(number) or not number.is_integer() or number <= 0:
+        return None
+    return int(number)
 
 
 # bonsaiが返したJSONを正規化して型エラーを防ぐ
-def normalize_bonsai_json(data: dict[str, Any]) -> dict[str, Any]:
+def normalize_bonsai_json(data: Any) -> dict[str, Any]:
+    if not isinstance(data, dict):
+        raise ValueError(BONSAI_RESPONSE_ERROR)
     data = data.copy()
 
     # リストとして返るべき部分を正規化する
@@ -34,20 +74,25 @@ def normalize_bonsai_json(data: dict[str, Any]) -> dict[str, Any]:
         elif isinstance(value, str):
             data[field] = [value]
 
-    # 価格設定が存在し, 文字列ならintにする(10進数でければNone)
-    for field in (
-        "min_price_jpy",
-        "max_price_jpy",
-        "target_price_jpy",
-        "expected_price_min_jpy",
-        "expected_price_max_jpy",
-    ):
-        value = data.get(field)
-        if isinstance(value, str):
-            stripped = value.strip()
-            data[field] = int(stripped) if stripped.isdecimal() else None
+    # 価格設定を正の整数に正規化し, 通貨装飾や桁区切りにも対応する
+    for field in PRICE_FIELDS:
+        if field in data:
+            data[field] = normalize_price_value(data.get(field))
 
     return data
+
+
+# 価格範囲の上下限が逆転していた場合は小さい方を下限にする
+def normalize_price_ranges(attrs: ProductAttributes) -> None:
+    for minimum_field, maximum_field in (
+        ("min_price_jpy", "max_price_jpy"),
+        ("expected_price_min_jpy", "expected_price_max_jpy"),
+    ):
+        minimum = getattr(attrs, minimum_field)
+        maximum = getattr(attrs, maximum_field)
+        if minimum is not None and maximum is not None and minimum > maximum:
+            setattr(attrs, minimum_field, maximum)
+            setattr(attrs, maximum_field, minimum)
 
 
 # BonsaiがMarkdownコードフェンス付きで返した場合もJSON部分だけ取り出す
@@ -161,8 +206,10 @@ def parse_attributes(raw_text: str, fallback_query: str) -> ProductAttributes:
         data = json.loads(extract_json_text(raw_text))
         data = normalize_bonsai_json(data)
         attrs = ProductAttributes.model_validate(data)
-    except (json.JSONDecodeError, ValidationError) as exc:
-        raise ValueError(f"Bonsai response is not valid product JSON: {raw_text}") from exc
+    except (json.JSONDecodeError, OverflowError, TypeError, ValidationError, ValueError):
+        raise ValueError(BONSAI_RESPONSE_ERROR) from None
+
+    normalize_price_ranges(attrs)
 
     # bonsaiが返したJSONに検索用ワードが含まれていなければ自然言語をそのまま使う
     if not attrs.search_queries_ja:

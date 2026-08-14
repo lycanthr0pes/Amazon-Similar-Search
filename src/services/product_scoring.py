@@ -1,8 +1,6 @@
 import math
-from pathlib import Path
 from typing import Sequence
 from operator import attrgetter
-from operator import itemgetter
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -334,45 +332,75 @@ def calculate_attribute_similarity(
     return max(score, condition_score), matched_terms, missing_terms
 
 
+def select_attribute_language(
+    attrs: ProductAttributes,
+    english_score: float,
+    japanese_score: float,
+) -> str:
+    if english_score > japanese_score:
+        return "en"
+    if japanese_score > english_score:
+        return "ja"
+
+    # 同点では、条件が存在しない言語が優先されて不足条件が空になることを防ぐ
+    english_has_conditions = bool(weighted_condition_terms(attrs, language="en"))
+    japanese_has_conditions = bool(weighted_condition_terms(attrs, language="ja"))
+    if japanese_has_conditions and not english_has_conditions:
+        return "ja"
+    return "en"
+
+
+def positive_price(value: int | None) -> int | None:
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        return None
+    return value
+
+
 # Outscraperが出力した商品価格とBonsaiが出力したユーザ指定価格の類似度を返す
 # 最大値1.0
 def calculate_price_score(attrs: ProductAttributes, product: NormalizedAmazonProduct) -> float:
-    price = product.price_jpy
-    if not isinstance(price, int) or price <= 0:
+    price = positive_price(product.price_jpy)
+    if price is None:
         return 0.0
 
+    target_price = positive_price(attrs.target_price_jpy)
+    minimum_price = positive_price(attrs.min_price_jpy)
+    maximum_price = positive_price(attrs.max_price_jpy)
+    if minimum_price is not None and maximum_price is not None:
+        minimum_price, maximum_price = sorted((minimum_price, maximum_price))
+
     # 「A円前後」のように目標価格が具体的に決められているとき
-    if attrs.target_price_jpy and attrs.target_price_jpy > 0:
-        return min(price, attrs.target_price_jpy) / max(price, attrs.target_price_jpy)
+    if target_price is not None:
+        return min(price, target_price) / max(price, target_price)
 
     # 「A円からB円まで」のように価格範囲が具体的に決められているとき
-    if attrs.min_price_jpy and attrs.max_price_jpy:
-        if attrs.min_price_jpy <= price <= attrs.max_price_jpy:
+    if minimum_price is not None and maximum_price is not None:
+        if minimum_price <= price <= maximum_price:
             return 1.0
-        if price < attrs.min_price_jpy:
-            return price / attrs.min_price_jpy
-        return attrs.max_price_jpy / price
+        if price < minimum_price:
+            return price / minimum_price
+        return maximum_price / price
 
     # 価格の下限が具体的に決められているとき
-    if attrs.min_price_jpy:
-        return min(1.0, price / attrs.min_price_jpy)
+    if minimum_price is not None:
+        return min(1.0, price / minimum_price)
 
     # 価格の上限が具体的に決められているとき
-    if attrs.max_price_jpy:
-        return min(1.0, attrs.max_price_jpy / price)
+    if maximum_price is not None:
+        return min(1.0, maximum_price / price)
 
     # 価格の上限が決められていないとき(対数関数で緩やかな推移にする)
     price_preference = (attrs.price_preference or "none").casefold()
     # 安いものが指定されているとき
     if price_preference == "cheap":
-        reference_price = attrs.expected_price_max_jpy
+        reference_price = positive_price(attrs.expected_price_max_jpy)
         if reference_price is not None:
             return min(1.0, reference_price / price)
         return 0.5
     # 高いものが指定されているとき
     if price_preference == "premium":
-        reference_price = attrs.expected_price_min_jpy
-        if reference_price is not None and reference_price > 0.0:
+        reference_price = positive_price(attrs.expected_price_min_jpy)
+        if reference_price is not None:
             return min(1.0, 0.5 + 0.5 * math.log10(max(0.0, price / reference_price) + 1.0))
         return 0.5
     # 価格への言及がないとき
@@ -425,11 +453,14 @@ def score_product(
     if attribute_similarity is None:
         attribute_en = calculate_attribute_similarity(attrs, product, language="en")
         attribute_ja = calculate_attribute_similarity(attrs, product, language="ja")
-        # スコアは返すタプルの0番目要素
-        attribute_similarity, matched_terms, missing_terms = max(
-            attribute_en,
-            attribute_ja,
-            key=itemgetter(0),
+        attribute_language = select_attribute_language(
+            attrs,
+            attribute_en[0],
+            attribute_ja[0],
+        )
+        # 選択した言語のスコアと条件表示を同じタプルから取得する
+        attribute_similarity, matched_terms, missing_terms = (
+            attribute_en if attribute_language == "en" else attribute_ja
         )
     else:
         # すでに類似度が指定されている場合に, 一致する語句を確認する
@@ -527,7 +558,11 @@ def score_products(
         attribute_score_en = max(attribute_score_en, condition_score_en)
         attribute_score_ja = max(attribute_score_ja, condition_score_ja)
         # 一致する語句を確認するための採用言語を取得
-        attribute_language = "en" if attribute_score_en >= attribute_score_ja else "ja"
+        attribute_language = select_attribute_language(
+            attrs,
+            attribute_score_en,
+            attribute_score_ja,
+        )
 
         scored_products.append(
             score_product(
@@ -552,7 +587,7 @@ def scoring(
 
     # JSONに書き込む
     scored_dump = [product.model_dump() for product in scored_products]
-    output_path = Path(f"cache/outscraper/amazon_products_scored_{query_hash}.json")
+    output_path = settings.cache_dir / "outscraper" / "scored" / f"{query_hash}.json"
     write_json(output_path, scored_dump)
     print(f"Scored products written to: {output_path}")
 

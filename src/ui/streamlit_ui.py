@@ -1,26 +1,25 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
+import logging
+import secrets
 
 import streamlit as st
 
 from src.config import settings
 from src.main.run import run_product_search
-from src.schemas import ProductScore
 from src.clients.bonsai_client import is_bonsai_running
+from src.schemas import ProductScore
 
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-CACHE_DIR = PROJECT_ROOT / "cache" / "outscraper"
-# テスト用
-TEST_QUERY = "静かで軽い日本語配列のワイヤレスキーボード"
+LOGGER = logging.getLogger(__name__)
+
 
 # 内部処理用のint価格を表示用のstrに変換する
 def format_price(price_jpy: int | None) -> str:
     if price_jpy is None:
         return "価格不明"
     return f"{price_jpy:,}円"
+
 
 # 内部処理用のfloat評価を表示用のstrに変換する
 def format_rating(rating: float | None, review_count: int | None) -> str:
@@ -30,29 +29,11 @@ def format_rating(rating: float | None, review_count: int | None) -> str:
         return f"{rating:.1f}"
     return f"{rating:.1f} / {review_count:,}件"
 
-# ファイルの情報から最終更新時刻を返す
-def get_modified_time(path: Path) -> float:
-    return path.stat().st_mtime
 
+@st.cache_data(ttl=5, show_spinner=False)
+def bonsai_is_available() -> bool:
+    return is_bonsai_running()
 
-# 前回の結果を表示するために確認用JSONをロードする
-# JSONに含まれる各結果データをProductScoreに変換したリストを返す
-def load_cached_results() -> list[ProductScore]:
-    # 最終更新時刻でソートする
-    cache_paths = sorted(
-        CACHE_DIR.glob("amazon_products_scored_*.json"),
-        key=get_modified_time,
-        reverse=True,
-    )
-    if not cache_paths:
-        return []
-
-    # 一番新しいJSONを読み込む
-    with cache_paths[0].open(encoding="utf-8") as file:
-        raw_products = json.load(file)
-
-    # JSONに含まれる各結果データをProductScoreに変換したリストを返す
-    return [ProductScore.model_validate(product) for product in raw_products]
 
 # Streamlitの画面のサイドバーに設定情報を表示する
 def render_status_panel() -> None:
@@ -68,13 +49,13 @@ def render_status_panel() -> None:
         st.sidebar.warning("Outscraper API key: missing")
 
     # Bonsaiサーバが起動しているかどうか
-    if is_bonsai_running():
+    if bonsai_is_available():
         st.sidebar.success("Bonsai Server: running")
     else:
         st.sidebar.warning("Bonsai Server: not running")
 
     # デバッグが有効になっている場合はスコア計算の要素を表示する
-    if settings.show_debug_info.casefold() == "true":
+    if settings.show_debug_info:
         st.sidebar.json(
             {
                 "title_score_weight": settings.title_score_weight,
@@ -86,12 +67,14 @@ def render_status_panel() -> None:
             }
         )
 
+
 # ラベルと, ラベルに合う要素の一覧を表示する
 def render_terms(label: str, terms: list[str]) -> None:
     if not terms:
         return
     st.caption(label)
     st.write(" / ".join(terms))
+
 
 # 結果の中身を表示
 def render_product(product: ProductScore, rank: int) -> None:
@@ -132,6 +115,7 @@ def render_product(product: ProductScore, rank: int) -> None:
             render_terms("不足している条件", product.missing_terms)
             render_terms("避けたい条件に一致", product.negative_matches)
 
+
 # 結果を表示
 def render_results(products: list[ProductScore], display_limit: int) -> None:
     if not products:
@@ -144,6 +128,7 @@ def render_results(products: list[ProductScore], display_limit: int) -> None:
     st.caption(f"{len(products)}件中 {min(display_limit, len(products))}件を表示")
     for rank, product in enumerate(products[:display_limit], start=1):
         render_product(product, rank)
+
 
 # 実行部分
 def main() -> None:
@@ -158,7 +143,7 @@ def main() -> None:
 
     # サイドパネル表示
     render_status_panel()
-    
+
     # 表示件数スライダー
     display_limit = st.sidebar.slider(
         "表示件数",
@@ -172,21 +157,17 @@ def main() -> None:
     # st.session_stateは保存された設定した値全て
     if "scored_products" not in st.session_state:
         st.session_state.scored_products = []
+    if "cache_scope" not in st.session_state:
+        st.session_state.cache_scope = secrets.token_hex(16)
 
     # 入力フォームを作る
     with st.form("product_search_form"):
         user_input = st.text_area(
             "商品を検索",
-            #value=TEST_QUERY,
             height=120,
         )
         # 検索ボタンを表示
         submitted = st.form_submit_button("検索")
-
-    # 1:5の2列
-    action_columns = st.columns([1, 5])
-    # 1列目にキャッシュ表示ボタンを表示
-    load_cache = action_columns[0].button("最新キャッシュ")
 
     # 検索ボタンが押されたとき
     if submitted:
@@ -197,17 +178,13 @@ def main() -> None:
                 with st.spinner("商品候補を取得してスコアリングしています。"):
                     # 入力された自然言語をバックエンド実行部に渡し, 結果を返す
                     # 返るまで待機
-                    st.session_state.scored_products = run_product_search(user_input.strip())
-            except Exception as error:
-                st.error(f"検索に失敗しました: {error}")
-
-    # キャッシュ表示ボタンが押されたとき
-    if load_cache:
-        try:
-            # 前回の結果が保存されたJSONをロードする
-            st.session_state.scored_products = load_cached_results()
-        except Exception as error:
-            st.error(f"キャッシュの読み込みに失敗しました: {error}")
+                    st.session_state.scored_products = run_product_search(
+                        user_input.strip(),
+                        cache_scope=st.session_state.cache_scope,
+                    )
+            except Exception:
+                LOGGER.exception("Product search failed")
+                st.error("検索に失敗しました。設定と外部サービスの状態を確認してください。")
 
     # 帰った結果の内, 表示上限まで表示
     render_results(st.session_state.scored_products, display_limit)

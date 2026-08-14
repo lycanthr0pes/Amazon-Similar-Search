@@ -1,9 +1,14 @@
-# Environment and secrets
+# Secrets and local configuration
 .env
 .env.*
 !.env.example
+.streamlit/secrets.toml
 
-# Python bytecode and caches
+# Python environments and caches
+.venv/
+venv/
+env/
+ENV/
 __pycache__/
 *.py[cod]
 *$py.class
@@ -11,41 +16,31 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 .pyre/
+
+# Test and coverage output
 .coverage
 .coverage.*
 htmlcov/
 
-# Virtual environments
-.venv/
-venv/
-env/
-ENV/
-
-# Build artifacts
+# Build output
 build/
 dist/
 *.egg-info/
 
-# Application cache outputs
+# Application-generated data
 cache/
-
-# Streamlit local configuration
-.streamlit/secrets.toml
-
-# Logs and temporary files
 *.log
 tmp/
 temp/
 
-# OS and editor files
-.DS_Store
-Thumbs.db
+# Downloaded external documentation
+docs/API Docs _ Outscraper.html
+
+# Editors and operating systems
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
-
-# Test
-tests/
-docs/
+.DS_Store
+Thumbs.db

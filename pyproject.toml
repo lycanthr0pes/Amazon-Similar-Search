@@ -1,7 +1,7 @@
 [project]
-name = "advanced-b"
+name = "amazon-explorer"
 version = "0.1.0"
-description = "Amazon類似度検索"
+description = "自然言語からAmazon商品候補を検索・正規化・ランキングするStreamlitアプリ"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

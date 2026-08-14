@@ -1,5 +1,7 @@
-from typing import Any
+import math
 from pathlib import Path
+import re
+from typing import Any
 
 from src.schemas import NormalizedAmazonProduct
 from src.config import settings
@@ -8,6 +10,7 @@ from src.utilities.json_editor import write_json
 
 TARGET_CURRENCY = "JPY"
 USD_CURRENCY = "USD"
+NUMBER_PATTERN = re.compile(r"[-+]?(?:\d[\d,]*(?:\.\d+)?|\.\d+)")
 
 
 # Outscraperが返した生のJSONから商品データだけを取り出し, リスト化する
@@ -65,29 +68,47 @@ def collect_image_urls(item: dict[str, Any]) -> list[str]:
     return clean_dupe_strings(image_urls)
 
 
-# int化
-# 文字列も10進数なら結合してint化
-def as_int(value: Any) -> int | None:
+# 数値を含む文字列から最初の数値を取り出す
+def as_number(value: Any) -> float | None:
     if isinstance(value, bool) or value is None:
         return None
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        digits = "".join(character for character in value if character.isdecimal())
-        return int(digits) if digits else None
-    return None
+    if isinstance(value, int | float):
+        number = float(value)
+    elif isinstance(value, str):
+        match = NUMBER_PATTERN.search(value)
+        if not match:
+            return None
+        try:
+            number = float(match.group().replace(",", ""))
+        except ValueError:
+            return None
+    else:
+        return None
+
+    return number if math.isfinite(number) else None
+
+
+# int化
+# 通貨記号や桁区切り付きの文字列も数値部分を取り出してint化
+def as_int(value: Any) -> int | None:
+    number = as_number(value)
+    return int(number) if number is not None else None
 
 
 # float化
 def as_float(value: Any) -> float | None:
-    if isinstance(value, bool) or value is None:
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
+    return as_number(value)
+
+
+# Outscraperの真偽値をbool化する
+def as_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int | float) and not isinstance(value, bool):
+        return value == 1
+    if isinstance(value, str):
+        return value.strip().casefold() in {"1", "true", "yes", "y"}
+    return False
 
 
 # 配列の各要素の前後の空白を削除
@@ -130,14 +151,15 @@ def detect_currency(item: dict[str, Any]) -> str | None:
             return TARGET_CURRENCY
     return None
 
+
 # USDを1ドル160円換算でJPYに変換する
 def convert_price_to_jpy(value: Any, currency: str | None) -> int | None:
+    price = as_float(value)
+    if price is None or price < 0:
+        return None
     if currency == USD_CURRENCY:
-        price = as_float(value)
-        if price is None:
-            return None
         return int(price * settings.usd_to_jpy_rate)
-    return as_int(value)
+    return int(price)
 
 
 # Outscraperが返した生のJSONから商品データ1件を正規化する
@@ -189,7 +211,7 @@ def normalize_product(item: dict[str, Any]) -> NormalizedAmazonProduct | None:
         # 商品ページURLから前後の空白を削除
         short_url=as_non_empty_string(item.get("short_url")),
         # Amazomプライム商品か
-        is_prime=bool(item.get("prime")),
+        is_prime=as_bool(item.get("prime")),
         # 在庫情報から前後の空白を削除
         availability=as_non_empty_string(item.get("availability")),
         # 配送情報から前後の空白を削除
@@ -231,7 +253,7 @@ def normalize(path: Path, query_hash: str) -> list[NormalizedAmazonProduct]:
 
     # list[NormalizedAmazonProduct]をJSON化して書き込む
     normalized_dump = [product.model_dump() for product in normalize_products]
-    output_path = Path(f"cache/outscraper/amazon_products_normalized_{query_hash}.json")
+    output_path = settings.cache_dir / "outscraper" / "normalized" / f"{query_hash}.json"
     write_json(output_path, normalized_dump)
     print(f"Normalized products written to: {output_path}")
 
