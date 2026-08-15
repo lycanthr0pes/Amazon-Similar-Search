@@ -35,11 +35,12 @@ amazon-explorer は、日本語の自然文から Amazon.co.jp の商品候補�
 ## セットアップ
 
 ```sh
-uv sync
-cp .env.example .env
+uv sync --locked
+test -e .env || cp .env.example .env
+chmod 600 .env
 ```
 
-`.env` には最低限 `OUTSCRAPER_API_KEY` を設定する。Bonsai の接続先や Outscraper の取得条件を変更する場合は、[環境変数一覧](docs/ENVIRONMENT_VARIABLES.md)を参照する。実値を `.env.example` や Git 管理ファイルへ書かないこと。
+既存の `.env` は上書きしない。`.env` には最低限 `OUTSCRAPER_API_KEY` を設定する。Bonsai の接続先や Outscraper の取得条件を変更する場合は、[バックエンド設計](docs/BACKEND.md)を参照する。実値を `.env.example` や Git 管理ファイルへ書かないこと。
 
 ## Bonsai 8B
 
@@ -114,11 +115,12 @@ git diff --check
 - ファイル配置は共通であり、認証ユーザー単位の永続領域、構造化メトリクス、分散トレース、認証、レート制限は未実装である。
 - ComfyUI、画像生成、画像類似度は現行実装に含まれない。追加する場合は設計候補として別途検討する。
 
-## 設計資料
+## 参照資料
 
-- [開発者向け概要](docs/README_dev.md)
-- [本番設計ガイド](docs/PRODUCTION_DESIGN_GUIDE.md)
-- [外部API仕様](docs/EXTERNAL_API_SPEC.md)
-- [環境変数一覧](docs/ENVIRONMENT_VARIABLES.md)
-- [データモデル仕様](docs/DATA_MODEL_SPEC.md)
-- [キャッシュ設計](docs/CACHE_DESIGN.md)
+- [ドキュメント索引](docs/INDEX.md)
+- [最短の利用開始手順](docs/QUICKSTART.md)
+- [設計方針](docs/DESIGN.md)
+- [フロントエンド設計](docs/FRONTEND.md)
+- [バックエンド設計](docs/BACKEND.md)
+- [セキュリティ](docs/SECURITY.md)
+- [トラブルシューティング](docs/TROUBLESHOOTING.md)
