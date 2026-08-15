@@ -5,6 +5,7 @@ description = "自然言語からAmazon商品候補を検索・正規化・ラ�
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "cryptography>=46.0.0",
     "pydantic>=2.0",
     "pydantic-settings>=2.14.1",
     "python-dotenv>=1.0",
@@ -29,4 +30,9 @@ line-length = 100
 target-version = "py310"
 
 [tool.pytest.ini_options]
+addopts = ["--strict-config", "--strict-markers"]
+markers = [
+    "live_api: permits intentional live-service access only with --run-live-api; excluded from CI",
+]
 pythonpath = ["."]
+testpaths = ["tests"]

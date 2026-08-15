@@ -1,0 +1,62 @@
+{
+  "schema_version": "2.0",
+  "task_id": "TASK-EXAMPLE",
+  "base_sha": "0000000000000000000000000000000000000000",
+  "trusted_harness_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "objective": "対象の回帰をテスト先行で修正する。開始前にbase_sha、承認済みharness SHA、RED fingerprintを置き換える。",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "追加する回帰テストが修正前に期待した理由で失敗し、修正後に成功する。"
+    }
+  ],
+  "review_prompts": {
+    "reviewer_sha256": "73173d6ae9a2874d2a6d2aac8507d2999b07d4fa35b07b2fe94bf34559325c18",
+    "adversary_sha256": "76d099e19cdc2da5d90ca5a266b666a940b822e7467194ca0ed648d9cf2f93c7"
+  },
+  "candidate_commit": {
+    "message": "TASK-EXAMPLE",
+    "author_name": "AI Review Coordinator",
+    "author_email": "ai-review@amazon-explorer.invalid",
+    "timestamp": 946684800,
+    "timezone": "+0000"
+  },
+  "acceptance_tests": [
+    {
+      "id": "AT-1",
+      "kind": "test",
+      "command": ["uv", "run", "pytest"],
+      "expected_exit_code": 0,
+      "expected_red_exit_codes": [1],
+      "expected_red_fingerprint_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "test_paths": ["tests/test_example.py"]
+    },
+    {
+      "id": "AT-2",
+      "kind": "quality",
+      "command": ["uv", "run", "ruff", "check", "."],
+      "expected_exit_code": 0
+    }
+  ],
+  "allowed_paths": ["src/**", "tests/**"],
+  "denied_paths": [
+    ".env",
+    ".env.*",
+    "cache/**",
+    "**/*.pdf",
+    "uv.lock",
+    "src/ui/**"
+  ],
+  "limits": {
+    "max_changed_files": 8,
+    "max_added_lines": 400,
+    "max_file_bytes": 2000000,
+    "max_total_bytes": 10000000
+  },
+  "network_policy": "deny",
+  "out_of_scope": [
+    "ブックマーク表示数を変更するプルダウンの追加・変更",
+    "削除済みPDFの復元",
+    "依存関係の追加"
+  ]
+}

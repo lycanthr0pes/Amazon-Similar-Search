@@ -1,0 +1,1 @@
+{"allowed_protocol":"tcp-tls","broker_host_mounts":false,"broker_internal_network":true,"gateway_external_network":true,"gateway_has_api_credential":false,"gateway_network_alias":"ai-review-egress-gateway","gateway_port":8443,"max_broker_connections":1,"schema_version":"1.0","target_host":"api.openai.com","target_port":443,"tls_server_name":"api.openai.com"}

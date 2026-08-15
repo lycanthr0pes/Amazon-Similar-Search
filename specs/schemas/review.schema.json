@@ -1,0 +1,198 @@
+{
+  "$defs": {
+    "Finding": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "critical",
+            "high",
+            "medium",
+            "low"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "requirement_id": {
+          "anyOf": [
+            {
+              "maxLength": 64,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Requirement Id"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "maxLength": 4096,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "evidence": {
+          "maxLength": 4000,
+          "minLength": 1,
+          "title": "Evidence",
+          "type": "string"
+        },
+        "proposed_test": {
+          "anyOf": [
+            {
+              "maxLength": 4000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Proposed Test"
+        }
+      },
+      "required": [
+        "id",
+        "severity",
+        "evidence"
+      ],
+      "title": "Finding",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_id": {
+      "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Task Sha256",
+      "type": "string"
+    },
+    "role": {
+      "enum": [
+        "reviewer",
+        "adversary"
+      ],
+      "title": "Role",
+      "type": "string"
+    },
+    "reviewer_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "title": "Reviewer Id",
+      "type": "string"
+    },
+    "session_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+      "title": "Session Id",
+      "type": "string"
+    },
+    "prompt_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Prompt Sha256",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "accept",
+        "changes_required",
+        "blocked"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "base_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Base Sha",
+      "type": "string"
+    },
+    "head_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Head Sha",
+      "type": "string"
+    },
+    "patch_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Patch Sha256",
+      "type": "string"
+    },
+    "summary": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "findings": {
+      "items": {
+        "$ref": "#/$defs/Finding"
+      },
+      "maxItems": 200,
+      "title": "Findings",
+      "type": "array"
+    },
+    "unverified": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Unverified",
+      "type": "array"
+    },
+    "external_calls": {
+      "description": "Whether reviewed repository code contacted an external service or tool; this does not describe the AI inference request itself.",
+      "title": "External Calls",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "task_id",
+    "task_sha256",
+    "role",
+    "reviewer_id",
+    "session_id",
+    "prompt_sha256",
+    "decision",
+    "base_sha",
+    "head_sha",
+    "patch_sha256",
+    "summary",
+    "external_calls"
+  ],
+  "title": "ReviewReport",
+  "type": "object"
+}

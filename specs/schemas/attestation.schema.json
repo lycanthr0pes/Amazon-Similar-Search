@@ -1,0 +1,178 @@
+{
+  "$defs": {
+    "AttestationStatement": {
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "artifact_type": {
+          "enum": [
+            "task",
+            "policy",
+            "gate",
+            "tdd-red",
+            "tdd-green",
+            "review"
+          ],
+          "title": "Artifact Type",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "task_id": {
+          "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "task_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Task Sha256",
+          "type": "string"
+        },
+        "base_sha": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Base Sha",
+          "type": "string"
+        },
+        "head_sha": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Head Sha",
+          "type": "string"
+        },
+        "candidate_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Candidate Sha256",
+          "type": "string"
+        },
+        "snapshot_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Snapshot Sha256",
+          "type": "string"
+        },
+        "runtime_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Runtime Manifest Sha256",
+          "type": "string"
+        },
+        "runner_image_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Runner Image Digest",
+          "type": "string"
+        },
+        "runner_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Runner Sha256",
+          "type": "string"
+        },
+        "argv_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Argv Sha256",
+          "type": "string"
+        },
+        "log_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Log Sha256",
+          "type": "string"
+        },
+        "role": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_.:-]{0,127}$",
+          "title": "Role",
+          "type": "string"
+        },
+        "session_id": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+          "title": "Session Id",
+          "type": "string"
+        },
+        "request_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Request Sha256",
+          "type": "string"
+        },
+        "response_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Response Sha256",
+          "type": "string"
+        },
+        "nonce": {
+          "pattern": "^[0-9a-f]{32,128}$",
+          "title": "Nonce",
+          "type": "string"
+        },
+        "issued_at": {
+          "maximum": 4102444800,
+          "minimum": 0,
+          "title": "Issued At",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "artifact_type",
+        "artifact_sha256",
+        "task_id",
+        "task_sha256",
+        "base_sha",
+        "head_sha",
+        "candidate_sha256",
+        "snapshot_sha256",
+        "runtime_manifest_sha256",
+        "runner_image_digest",
+        "runner_sha256",
+        "argv_sha256",
+        "log_sha256",
+        "role",
+        "session_id",
+        "request_sha256",
+        "response_sha256",
+        "nonce",
+        "issued_at"
+      ],
+      "title": "AttestationStatement",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "algorithm": {
+      "const": "Ed25519",
+      "default": "Ed25519",
+      "title": "Algorithm",
+      "type": "string"
+    },
+    "key_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Key Id",
+      "type": "string"
+    },
+    "statement": {
+      "$ref": "#/$defs/AttestationStatement"
+    },
+    "signature": {
+      "maxLength": 86,
+      "minLength": 86,
+      "pattern": "^[A-Za-z0-9_-]{86}$",
+      "title": "Signature",
+      "type": "string"
+    }
+  },
+  "required": [
+    "key_id",
+    "statement",
+    "signature"
+  ],
+  "title": "SignedAttestation",
+  "type": "object"
+}

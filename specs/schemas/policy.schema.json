@@ -1,0 +1,153 @@
+{
+  "$defs": {
+    "DiffFile": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "maxLength": 4096,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "status": {
+          "pattern": "^[A-Z?]+$",
+          "title": "Status",
+          "type": "string"
+        },
+        "additions": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Additions"
+        },
+        "deletions": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Deletions"
+        },
+        "binary": {
+          "default": false,
+          "title": "Binary",
+          "type": "boolean"
+        },
+        "content_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Content Sha256"
+        }
+      },
+      "required": [
+        "path",
+        "status"
+      ],
+      "title": "DiffFile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_id": {
+      "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Task Sha256",
+      "type": "string"
+    },
+    "passed": {
+      "title": "Passed",
+      "type": "boolean"
+    },
+    "trusted_harness_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Trusted Harness Sha256",
+      "type": "string"
+    },
+    "base_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Base Sha",
+      "type": "string"
+    },
+    "head_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Head Sha",
+      "type": "string"
+    },
+    "patch_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Patch Sha256"
+    },
+    "changed_files": {
+      "items": {
+        "$ref": "#/$defs/DiffFile"
+      },
+      "title": "Changed Files",
+      "type": "array"
+    },
+    "total_added_lines": {
+      "minimum": 0,
+      "title": "Total Added Lines",
+      "type": "integer"
+    },
+    "violations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Violations",
+      "type": "array"
+    }
+  },
+  "required": [
+    "task_id",
+    "task_sha256",
+    "passed",
+    "trusted_harness_sha256",
+    "base_sha",
+    "head_sha",
+    "changed_files",
+    "total_added_lines",
+    "violations"
+  ],
+  "title": "PolicyReport",
+  "type": "object"
+}

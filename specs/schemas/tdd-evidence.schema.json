@@ -1,0 +1,184 @@
+{
+  "$defs": {
+    "GreenEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "exit_code": {
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Exit Code",
+          "type": "integer"
+        },
+        "log_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Log Sha256",
+          "type": "string"
+        },
+        "test_patch_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Test Patch Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "exit_code",
+        "log_sha256",
+        "test_patch_sha256"
+      ],
+      "title": "GreenEvidence",
+      "type": "object"
+    },
+    "RedEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "exit_code": {
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Exit Code",
+          "type": "integer"
+        },
+        "log_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Log Sha256",
+          "type": "string"
+        },
+        "failure_fingerprint_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Failure Fingerprint Sha256",
+          "type": "string"
+        },
+        "test_patch_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Test Patch Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "exit_code",
+        "log_sha256",
+        "failure_fingerprint_sha256",
+        "test_patch_sha256"
+      ],
+      "title": "RedEvidence",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "enum": [
+        "1.0",
+        "2.0"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_id": {
+      "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Task Sha256",
+      "type": "string"
+    },
+    "base_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Base Sha",
+      "type": "string"
+    },
+    "head_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Head Sha",
+      "type": "string"
+    },
+    "patch_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Patch Sha256",
+      "type": "string"
+    },
+    "acceptance_test_id": {
+      "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+      "title": "Acceptance Test Id",
+      "type": "string"
+    },
+    "command": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 64,
+      "minItems": 1,
+      "title": "Command",
+      "type": "array"
+    },
+    "test_paths": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Test Paths",
+      "type": "array"
+    },
+    "test_manifest_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Test Manifest Sha256",
+      "type": "string"
+    },
+    "test_patch_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Test Patch Sha256",
+      "type": "string"
+    },
+    "red_snapshot_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Red Snapshot Sha256"
+    },
+    "green_snapshot_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Green Snapshot Sha256"
+    },
+    "red": {
+      "$ref": "#/$defs/RedEvidence"
+    },
+    "green": {
+      "$ref": "#/$defs/GreenEvidence"
+    }
+  },
+  "required": [
+    "task_id",
+    "task_sha256",
+    "base_sha",
+    "head_sha",
+    "patch_sha256",
+    "acceptance_test_id",
+    "command",
+    "test_paths",
+    "test_manifest_sha256",
+    "test_patch_sha256",
+    "red",
+    "green"
+  ],
+  "title": "TddEvidence",
+  "type": "object"
+}

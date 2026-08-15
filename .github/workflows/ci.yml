@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Deterministic gates (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.13"]
+
+    steps:
+      # Full history keeps base/head commits available to the future AI policy gate.
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+          version: "0.11.32"
+
+      - name: Synchronize locked dependencies
+        run: uv sync --locked
+
+      - name: Verify dependency lock
+        run: uv lock --check
+
+      - name: Run Ruff lint
+        run: uv run ruff check .
+
+      - name: Check Ruff formatting
+        run: uv run ruff format --check .
+
+      - name: Run offline test suite
+        run: uv run pytest -m 'not live_api'
+
+      - name: Check committed patch whitespace
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            git diff --check "$PR_BASE_SHA...HEAD"
+          elif git cat-file -e "${PUSH_BASE_SHA}^{commit}" 2>/dev/null; then
+            git diff --check "$PUSH_BASE_SHA..HEAD"
+          else
+            empty_tree_sha=$(git hash-object -t tree /dev/null)
+            git diff --check "$empty_tree_sha" HEAD --
+          fi
+
+      # Production AI execution is intentionally absent from CI. CI has no
+      # credentials or egress; the attested workflow runs only from an approved,
+      # digest-pinned rootless release host and still requires human approval.

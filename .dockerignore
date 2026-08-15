@@ -1,0 +1,17 @@
+**
+!pyproject.toml
+!uv.lock
+!containers/
+!containers/ai-review-runner/
+!containers/ai-review-runner/Dockerfile
+!containers/ai-review-broker/
+!containers/ai-review-broker/Dockerfile
+!containers/ai-review-coordinator/
+!containers/ai-review-coordinator/Dockerfile
+!containers/ai-review-coordinator/requirements.txt
+!containers/ai-review-egress/
+!containers/ai-review-egress/Dockerfile
+!tools/
+!tools/ai_review/
+!tools/ai_review/broker_entry.py
+!tools/ai_review/*.py

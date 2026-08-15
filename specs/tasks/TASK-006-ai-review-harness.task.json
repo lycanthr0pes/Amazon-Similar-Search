@@ -1,0 +1,149 @@
+{
+  "schema_version": "1.0",
+  "task_id": "TASK-006",
+  "base_sha": "2fd9c5b1c12efbcf14172d62ad23341291292a3a",
+  "trusted_harness_sha256": "0d27b9c541b01b1fb6f02c270286965c1507748abe5f5667ac5a9e7250426278",
+  "objective": "amazon-explorerへ、外部preflightで固定したtrusted runtime、OS隔離したAI相互レビュー、凍結証拠、TDD判定を七段階で結ぶfail-closedな運用基盤を導入する。",
+  "requirements": [
+    {
+      "id": "HARNESS-1",
+      "text": "task、review、TDD evidence、verdictは未知フィールドと矛盾する証拠を拒否する。"
+    },
+    {
+      "id": "TRUST-1",
+      "text": "candidate外のroot-owned launcherがimport前にPython、zipapp、task、lock、schema、policy、公開鍵、コンテナimage digestを検証し、不一致ならphase zero前に停止する。"
+    },
+    {
+      "id": "PHASE-1",
+      "text": "snapshot、red-snapshot、offline、review-packet、broker、sign、attested-judgeの固定七段階をdigest chainと一回限りの状態遷移で実行する。"
+    },
+    {
+      "id": "POLICY-1",
+      "text": "固定したbase/head差分に対して許可・禁止パス、変更上限、危険なGit状態、patch hashをfail-closedで検査する。"
+    },
+    {
+      "id": "REVIEW-1",
+      "text": "reviewerとadversaryを独立した役割として要求し、重大指摘、SHA不一致、要件ID不一致を決定論的に拒否する。"
+    },
+    {
+      "id": "EVIDENCE-1",
+      "text": "offline runnerとbrokerのprepare結果、外部実行stdout/stderr、終了状態、runtime計測値、最終ledgerをcanonical raw evidenceとして凍結し、judgeがlive DBなしで再構成・再検証する。"
+    },
+    {
+      "id": "ISOLATION-1",
+      "text": "candidateは読み取り専用content-addressed snapshotだけを渡し、runnerはnetwork none、brokerはhost mountなしのrootless Podman keep-idまたはuser namespace付きruntimeと分離gatewayを必須にする。"
+    },
+    {
+      "id": "COST-1",
+      "text": "GPT-5.6 Solのservice_tier defaultを固定し、一回ごとに入力260000・出力12000 token、既定packetに544000 token・4540000 microUSD、release絶対上限に1088000 token・7940000 microUSDを設定し、失敗試行も消費するatomic ledgerをprepare前からattested judgeまで拘束する。"
+    },
+    {
+      "id": "ATTEST-1",
+      "text": "Ed25519署名、外部固定した公開鍵digest、role/session/request/response/log/runtime/snapshot binding、永続nonce ledgerで改ざん・役割差替え・replayを拒否する。"
+    },
+    {
+      "id": "TDD-1",
+      "text": "RED失敗理由、GREEN成功、REDからGREENまでのテストpatch不変を判定に必須とする。"
+    },
+    {
+      "id": "SEC-1",
+      "text": "通常pytestのIP通信と名前解決を遮断し、live APIはmarkerとCLI optionの二重opt-inにする。"
+    },
+    {
+      "id": "CI-1",
+      "text": "Python 3.10と3.13でlock、Ruff、offline pytest、committed diff whitespaceをシークレットなしで検証する。"
+    },
+    {
+      "id": "BOOTSTRAP-1",
+      "text": "TASK-006自体はschema v1のbootstrap記録であり、v2の正確なtest_pathsと独立した事前署名証拠を持たないため、自身をattested passとして扱わない。"
+    }
+  ],
+  "review_prompts": {
+    "reviewer_sha256": "73173d6ae9a2874d2a6d2aac8507d2999b07d4fa35b07b2fe94bf34559325c18",
+    "adversary_sha256": "76d099e19cdc2da5d90ca5a266b666a940b822e7467194ca0ed648d9cf2f93c7"
+  },
+  "candidate_commit": {
+    "message": "TASK-006",
+    "author_name": "AI Review Coordinator",
+    "author_email": "ai-review@amazon-explorer.invalid",
+    "timestamp": 946684800,
+    "timezone": "+0000"
+  },
+  "acceptance_tests": [
+    {
+      "id": "AT-LOCK",
+      "kind": "quality",
+      "command": ["uv", "lock", "--check"],
+      "expected_exit_code": 0
+    },
+    {
+      "id": "AT-LINT",
+      "kind": "quality",
+      "command": ["uv", "run", "ruff", "check", "."],
+      "expected_exit_code": 0
+    },
+    {
+      "id": "AT-FORMAT",
+      "kind": "quality",
+      "command": ["uv", "run", "ruff", "format", "--check", "."],
+      "expected_exit_code": 0
+    },
+    {
+      "id": "AT-TEST",
+      "kind": "test",
+      "command": ["uv", "run", "pytest", "-m", "not live_api"],
+      "expected_exit_code": 0,
+      "expected_red_exit_codes": [1],
+      "expected_red_fingerprint_sha256": "7e30743f1f4dfa9141542970c4f25eb4ba9353edef812ea10646d4772dc240cf"
+    },
+    {
+      "id": "AT-DIFF",
+      "kind": "quality",
+      "command": [
+        "git",
+        "diff",
+        "--check",
+        "2fd9c5b1c12efbcf14172d62ad23341291292a3a..HEAD"
+      ],
+      "expected_exit_code": 0
+    }
+  ],
+  "allowed_paths": [
+    ".dockerignore",
+    ".github/workflows/ci.yml",
+    ".gitignore",
+    "AGENTS.md",
+    "containers/**",
+    "docs/**",
+    "pyproject.toml",
+    "specs/**",
+    "src/services/outscraper_search_select.py",
+    "src/ui/streamlit_ui.py",
+    "tests/**",
+    "tools/__init__.py",
+    "tools/ai_review/**",
+    "uv.lock"
+  ],
+  "denied_paths": [
+    ".env",
+    ".env.*",
+    ".streamlit/secrets.toml",
+    "cache/**",
+    "**/*.pdf"
+  ],
+  "limits": {
+    "max_changed_files": 160,
+    "max_added_lines": 60000,
+    "max_file_bytes": 2000000,
+    "max_total_bytes": 10000000
+  },
+  "network_policy": "deny",
+  "out_of_scope": [
+    "ブックマーク表示数を変更するプルダウンの追加・変更",
+    "検索結果表示件数スライダーをブックマーク設定として扱うこと",
+    "削除済みPDFの復元または参照",
+    "外部AI、Bonsai、Outscraper、Amazonへの実通信",
+    "自動commit、push、merge",
+    "TASK-006 bootstrap記録そのものをattested passとして自己承認すること"
+  ]
+}

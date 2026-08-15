@@ -1,0 +1,174 @@
+{
+  "$defs": {
+    "GateResult": {
+      "additionalProperties": false,
+      "properties": {
+        "task_id": {
+          "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+          "title": "Task Id",
+          "type": "string"
+        },
+        "task_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Task Sha256",
+          "type": "string"
+        },
+        "head_sha": {
+          "pattern": "^[0-9a-f]{40}$",
+          "title": "Head Sha",
+          "type": "string"
+        },
+        "patch_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Patch Sha256",
+          "type": "string"
+        },
+        "acceptance_test_id": {
+          "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+          "title": "Acceptance Test Id",
+          "type": "string"
+        },
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Command",
+          "type": "array"
+        },
+        "expected_exit_code": {
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Expected Exit Code",
+          "type": "integer"
+        },
+        "passed": {
+          "title": "Passed",
+          "type": "boolean"
+        },
+        "exit_code": {
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Exit Code",
+          "type": "integer"
+        },
+        "evidence_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Evidence Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "task_id",
+        "task_sha256",
+        "head_sha",
+        "patch_sha256",
+        "acceptance_test_id",
+        "command",
+        "expected_exit_code",
+        "passed",
+        "exit_code",
+        "evidence_sha256"
+      ],
+      "title": "GateResult",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_id": {
+      "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+      "title": "Task Id",
+      "type": "string"
+    },
+    "task_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Task Sha256",
+      "type": "string"
+    },
+    "trusted_harness_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Trusted Harness Sha256",
+      "type": "string"
+    },
+    "base_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Base Sha",
+      "type": "string"
+    },
+    "head_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Head Sha",
+      "type": "string"
+    },
+    "patch_sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Patch Sha256"
+    },
+    "status": {
+      "enum": [
+        "pass",
+        "fail",
+        "human_review"
+      ],
+      "title": "Status",
+      "type": "string"
+    },
+    "gates": {
+      "items": {
+        "$ref": "#/$defs/GateResult"
+      },
+      "title": "Gates",
+      "type": "array"
+    },
+    "blocking_findings": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Blocking Findings",
+      "type": "array"
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Reasons",
+      "type": "array"
+    },
+    "human_approval_required": {
+      "const": true,
+      "title": "Human Approval Required",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "task_id",
+    "task_sha256",
+    "trusted_harness_sha256",
+    "base_sha",
+    "head_sha",
+    "status",
+    "gates",
+    "blocking_findings",
+    "reasons",
+    "human_approval_required"
+  ],
+  "title": "Verdict",
+  "type": "object"
+}

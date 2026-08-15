@@ -1,0 +1,307 @@
+{
+  "$defs": {
+    "AcceptanceTest": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "test",
+            "quality"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "command": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Command",
+          "type": "array"
+        },
+        "expected_exit_code": {
+          "default": 0,
+          "maximum": 255,
+          "minimum": 0,
+          "title": "Expected Exit Code",
+          "type": "integer"
+        },
+        "expected_red_exit_codes": {
+          "items": {
+            "type": "integer"
+          },
+          "maxItems": 16,
+          "title": "Expected Red Exit Codes",
+          "type": "array"
+        },
+        "expected_red_fingerprint_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Red Fingerprint Sha256"
+        },
+        "test_paths": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 100,
+          "title": "Test Paths",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "command"
+      ],
+      "title": "AcceptanceTest",
+      "type": "object"
+    },
+    "CandidateCommitPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[^\\r\\n]+$",
+          "title": "Message",
+          "type": "string"
+        },
+        "author_name": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[^<>\\r\\n]+$",
+          "title": "Author Name",
+          "type": "string"
+        },
+        "author_email": {
+          "maxLength": 254,
+          "minLength": 3,
+          "pattern": "^[^<>\\s@]+@[^<>\\s@]+$",
+          "title": "Author Email",
+          "type": "string"
+        },
+        "timestamp": {
+          "maximum": 4102444800,
+          "minimum": 0,
+          "title": "Timestamp",
+          "type": "integer"
+        },
+        "timezone": {
+          "pattern": "^[+-](?:0[0-9]|1[0-4])[0-5][0-9]$",
+          "title": "Timezone",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "author_name",
+        "author_email",
+        "timestamp",
+        "timezone"
+      ],
+      "title": "CandidateCommitPolicy",
+      "type": "object"
+    },
+    "DiffLimits": {
+      "additionalProperties": false,
+      "properties": {
+        "max_changed_files": {
+          "maximum": 500,
+          "minimum": 1,
+          "title": "Max Changed Files",
+          "type": "integer"
+        },
+        "max_added_lines": {
+          "maximum": 100000,
+          "minimum": 0,
+          "title": "Max Added Lines",
+          "type": "integer"
+        },
+        "max_file_bytes": {
+          "default": 2000000,
+          "maximum": 100000000,
+          "minimum": 1,
+          "title": "Max File Bytes",
+          "type": "integer"
+        },
+        "max_total_bytes": {
+          "default": 10000000,
+          "maximum": 500000000,
+          "minimum": 1,
+          "title": "Max Total Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_changed_files",
+        "max_added_lines"
+      ],
+      "title": "DiffLimits",
+      "type": "object"
+    },
+    "Requirement": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ],
+      "title": "Requirement",
+      "type": "object"
+    },
+    "ReviewPromptDigests": {
+      "additionalProperties": false,
+      "properties": {
+        "reviewer_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Reviewer Sha256",
+          "type": "string"
+        },
+        "adversary_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Adversary Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reviewer_sha256",
+        "adversary_sha256"
+      ],
+      "title": "ReviewPromptDigests",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "enum": [
+        "1.0",
+        "2.0"
+      ],
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "task_id": {
+      "pattern": "^[A-Z][A-Z0-9_-]{0,63}$",
+      "title": "Task Id",
+      "type": "string"
+    },
+    "base_sha": {
+      "pattern": "^[0-9a-f]{40}$",
+      "title": "Base Sha",
+      "type": "string"
+    },
+    "trusted_harness_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Trusted Harness Sha256",
+      "type": "string"
+    },
+    "objective": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Objective",
+      "type": "string"
+    },
+    "requirements": {
+      "items": {
+        "$ref": "#/$defs/Requirement"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Requirements",
+      "type": "array"
+    },
+    "review_prompts": {
+      "$ref": "#/$defs/ReviewPromptDigests"
+    },
+    "candidate_commit": {
+      "$ref": "#/$defs/CandidateCommitPolicy"
+    },
+    "acceptance_tests": {
+      "items": {
+        "$ref": "#/$defs/AcceptanceTest"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Acceptance Tests",
+      "type": "array"
+    },
+    "allowed_paths": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Allowed Paths",
+      "type": "array"
+    },
+    "denied_paths": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "minItems": 1,
+      "title": "Denied Paths",
+      "type": "array"
+    },
+    "limits": {
+      "$ref": "#/$defs/DiffLimits"
+    },
+    "network_policy": {
+      "const": "deny",
+      "title": "Network Policy",
+      "type": "string"
+    },
+    "out_of_scope": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 100,
+      "title": "Out Of Scope",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "task_id",
+    "base_sha",
+    "trusted_harness_sha256",
+    "objective",
+    "requirements",
+    "review_prompts",
+    "candidate_commit",
+    "acceptance_tests",
+    "allowed_paths",
+    "denied_paths",
+    "limits",
+    "network_policy"
+  ],
+  "title": "TaskSpec",
+  "type": "object"
+}
