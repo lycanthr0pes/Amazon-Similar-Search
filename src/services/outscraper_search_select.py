@@ -17,4 +17,4 @@ def select_outscraper_query(attrs: ProductAttributes) -> str:
     if attrs.search_queries_en:
         return validate_search_query(attrs.search_queries_en[0])
     # 検索クエリが存在しなければ自然言語をそのまま返す
-    return attrs.estimated_product_name_ja
+    return validate_search_query(attrs.estimated_product_name_ja)

@@ -69,6 +69,18 @@ def test_settings_require_at_least_one_positive_condition_weight() -> None:
         )
 
 
+def test_call_outscraper_rejects_missing_api_key_before_fetch(monkeypatch) -> None:
+    monkeypatch.setattr(outscraper_client.settings, "outscraper_api_key", "")
+
+    with (
+        patch.object(outscraper_client, "fetch_amazon_products") as fetch,
+        pytest.raises(RuntimeError, match="OUTSCRAPER_API_KEY is not set"),
+    ):
+        outscraper_client.call_outscraper("keyboard", "cache-key")
+
+    fetch.assert_not_called()
+
+
 def test_task_state_distinguishes_empty_success_from_failure() -> None:
     assert outscraper_client.task_state({"status": "success", "data": []}) == "success"
     assert outscraper_client.task_state({"data": []}) == "success"

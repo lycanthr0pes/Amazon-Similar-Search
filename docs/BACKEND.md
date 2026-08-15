@@ -65,7 +65,7 @@ uv run python -m src.main.run "静かで軽い日本語配列のワイヤレス�
 2. `search_queries_en[0]`
 3. `estimated_product_name_ja`
 
-日本語または英語の検索語を選ぶ場合、空文字と `http://` / `https://` で始まる値を拒否する。
+どの優先段階を選んだ場合も、空文字と `http://` / `https://` で始まる値を拒否する。`estimated_product_name_ja` へのfallbackも同じ `validate_search_query()` を通る。
 
 ### 3.3 第3段階: 商品取得と正規化
 
@@ -143,7 +143,7 @@ uv run python -m src.main.run "静かで軽い日本語配列のワイヤレス�
 | `APP_ENV` | `local` | 定義済みだが現行処理では未参照 |
 | `LOG_LEVEL` | `INFO` | 定義済みだが現行処理では未参照 |
 | `SEARCH_RESULT_DISPLAY_LIMIT` | `10` | 正数。UI初期表示数、画面上限30 |
-| `SHOW_DEBUG_INFO` | `false` | サイドバーへ一部採点設定を表示 |
+| `SHOW_DEBUG_INFO` | `false` | サイドバーへ採点の総合係数3項目と条件語重み5項目を表示 |
 
 空文字を数値、bool、Pathの項目として有効化すると型変換に失敗し得る。`.env.example` をコピーした後、利用する行だけコメントを外す。
 

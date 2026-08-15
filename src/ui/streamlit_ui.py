@@ -64,6 +64,8 @@ def render_status_panel() -> None:
                 "required_term_weight": settings.required_term_weight,
                 "preferred_term_weight": settings.preferred_term_weight,
                 "related_term_weight": settings.related_term_weight,
+                "color_term_weight": settings.color_term_weight,
+                "feature_term_weight": settings.feature_term_weight,
             }
         )
 
