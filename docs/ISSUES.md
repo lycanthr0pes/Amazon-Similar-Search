@@ -15,36 +15,24 @@
 
 ## 2. オープン
 
-### ISS-001: デバッグ表示に2つの条件語重みがない
-
-- 状態: オープン
-- 重要度: 低
-- 確認日: 2026-08-15
-- 対象: `src/ui/streamlit_ui.py` の `render_status_panel()`
-- 前提: `SHOW_DEBUG_INFO=true`
-
-再現手順:
-
-1. デバッグ表示を有効にしてStreamlitを起動する
-2. サイドバーの重みJSONを確認する
-
-実際の状態:
-
-- 総合係数 `title`、`attribute`、`price` と、条件語重み `required`、`preferred`、`related` が表示対象である
-- 採点で使用する `color_term_weight` と `feature_term_weight` は表示対象に含まれない
-
-期待する状態:
-
-- 「スコア計算の要素を表示する」というデバッグ表示で、採点に使う全重みを確認できる
-
-影響:
-
-- 採点計算自体には影響しない
-- 設定調整時に、色と特徴語の重みだけ画面から確認できない
-
-対応作業: [TODO-002](TODO.md#todo-002-デバッグ表示へ全条件語重みを表示する)
+2026-08-16時点で、現行作業ツリーにオープンとして記録する確認済みIssueはない。これは不具合が存在しないことを保証するものではない。AIハーネスの7/7 code境界、`workflow-init`、専用userとrootless Podman、root-owned release、4 image、承認済みTaskSpec v2 canary、credential-free `nonlive_ready`、launcher userが読めるlive用initial requestは実hostで確認済みである。OpenAI APIを使うlive E2Eとnonce ledger長期運用が未実行・未定義であることは不具合ではなく、[TASK-007](TASKS.md#task-007-attested-ai-review境界の実装) と [TD-009](TECH-DEBT-TRACKER.md#td-009-ai変更の役割分離と証拠契約) の運用境界として追跡する。
 
 ## 3. 解決済みの履歴
+
+### ISS-001: デバッグ表示に2つの条件語重みがない
+
+- 状態: 解決済み
+- 重要度: 低
+- 確認日: 2026-08-15
+- 解決日: 2026-08-15
+- 対象: `src/ui/streamlit_ui.py` の `render_status_panel()`
+- 前提: `SHOW_DEBUG_INFO=true`
+- 原因: 採点に使う `color_term_weight` と `feature_term_weight` がデバッグJSONの構築対象に含まれていなかった
+- 解決: 2項目を追加し、総合係数3項目と条件語重み5項目を表示対象にした
+- 回帰証拠: `tests/test_streamlit_ui.py` は修正前1 failed, 2 passed、修正後3 passed。テストSHA-256は `042ad1b2cd8307afe40787bd53510d4cb55f66914548adf9ed76b57b8306ac4c`
+- 対応作業: [TODO-002](TODO.md#todo-002-デバッグ表示へ全条件語重みを表示する)
+
+APIキーの値は表示対象にしていない。検索結果表示件数スライダーにも変更はなく、ブックマーク表示数プルダウンは追加していない。
 
 次はコミット `fb2115a`（2026-08-14）後のコードと回帰テストで解決状態を確認できる。
 
@@ -68,6 +56,8 @@
 - 実Outscraper契約・課金環境での結合動作
 - Streamlitをブラウザ操作した一連のUI動作
 - 複数プロセスから同じキャッシュへ書く競合
+- root-owned releaseをrootless Podman `keep-id` hostへ配備したAIハーネスのlive 7-phase E2E
+- 外部OpenAI APIのcredential・送信内容・費用承認を伴うlive実行
 
 これらが未確認であること自体を不具合とは断定しない。障害が観測された場合は、入力やシークレットを伏せた再現情報とともに新しいIDを作る。
 

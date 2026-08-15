@@ -2,14 +2,14 @@
 
 ## 1. 役割
 
-この文書は、複数の設計判断、複数モジュール、段階的な検証を要する成果単位を管理する。以下は現行実装で確認できる制約から導いた候補であり、着手承認、担当者、期限、実装方式が決まったことを意味しない。
+この文書は、複数の設計判断、複数モジュール、段階的な検証を要する成果単位を管理する。候補項目は現行実装で確認できる制約から導いたものであり、着手承認、担当者、期限、実装方式が決まったことを意味しない。`TASK-006` は安全側MVP、`TASK-007` はattested境界とproduction接続を扱う。
 
 - 小規模な作業は [TODO.md](TODO.md)
 - 再現可能な不具合は [ISSUES.md](ISSUES.md)
 - 構造上の改善理由は [TECH-DEBT-TRACKER.md](TECH-DEBT-TRACKER.md)
 - 着手する大規模タスクの詳細計画は [PLANS.md](PLANS.md) に従う
 
-状態は `候補`、`未着手`、`計画中`、`実行中`、`ブロック`、`完了` を使う。現時点の全項目は候補であり、進行中の大規模タスクはない。
+状態は `候補`、`未着手`、`計画中`、`実行中`、`ブロック`、`完了` を使う。
 
 ## 2. 一覧
 
@@ -20,6 +20,8 @@
 | TASK-003 | 候補 | 多利用者向けセキュリティ境界の構築 |
 | TASK-004 | 候補 | 観測可能性と配布パイプラインの整備 |
 | TASK-005 | 候補 | ランキング品質評価の確立 |
+| TASK-006 | 完了 | AI相互レビューとTDDハーネスの導入 |
+| TASK-007 | 実行中 | attested AI review境界の実装 |
 
 優先順位と実施時期は確定していない。ローカル単独利用を続けるか、外部公開するかで必要性が大きく変わる。
 
@@ -105,7 +107,7 @@
 
 - 状態: 候補
 - 根拠: [TD-004](TECH-DEBT-TRACKER.md#td-004-観測可能性とログ管理) と [TD-006](TECH-DEBT-TRACKER.md#td-006-ciと配布方式)
-- 現行: ローカル `uv` 実行、`print()` 中心の進捗、手動のlint・test。CI、コンテナ、構造化メトリクスはない
+- 現行: `print()` 中心の進捗で構造化メトリクスと配布方式はない。現行作業ツリーにはPython 3.10 / 3.13の決定論的CIがあるが、GitHub上の実行結果と必須チェック設定は未確認である
 - 目標: 対応Python環境で変更を自動検証し、障害を検索単位で追跡できる配布・運用基盤を作る
 
 想定する成果物:
@@ -145,6 +147,69 @@
 - 重み変更の改善・悪化を指標で説明できる
 - 実APIの変動とアルゴリズム変更を分けて評価できる
 - 評価データの出所と利用条件が [REFERENCES.md](REFERENCES.md) に記録されている
+
+## TASK-006: AI相互レビューとTDDハーネスの導入
+
+- 状態: 完了
+- 実行計画: [EXEC-001](plans/EXEC-001-AI-REVIEW-TDD-HARNESS.md)
+- 根拠: [TD-009](TECH-DEBT-TRACKER.md#td-009-ai変更の役割分離と証拠契約)
+- 成果: strict task/policy/gate/review/TDD/verdict契約、canonical single-commit policy、Git object再hash、standalone clone検査、deterministic judge、network guard、CI gate、TDDパイロットを導入した
+- 境界: EXEC-001はbootstrap時点の履歴であり、その後のattested runtime、snapshot、runner、broker、署名はTASK-007で実装した
+
+TASK-006自体では外部AI、Bonsai、Outscraper、Amazonの実通信、課金、commit、push、mergeを行っていない。ブックマーク表示数プルダウン、検索結果スライダーの用途変更、削除済みPDFの復元も対象外である。
+
+## TASK-007: attested AI review境界の実装
+
+- 状態: 実行中（7/7 actual handler、frozen sign/judge、workflow初期化、credential-free deployment check、独立security review、rootless Podman実配備、承認済みv2 canaryの `nonlive_ready`、UID 1100が読めるlive用initial requestは確認済み。live E2Eとnonce長期運用が残る）
+- 実行計画: [EXEC-002](plans/EXEC-002-ATTESTED-AI-REVIEW-BOUNDARIES.md)
+- 根拠: [TD-009](TECH-DEBT-TRACKER.md#td-009-ai変更の役割分離と証拠契約)
+- 現行: import前stdlib preflight、root-owned runtime契約、read-only snapshot/RED overlay、networkなしraw offline runner、bounded packet、固定egressのprovisioned broker、frozen final ledger、失敗attemptを含むtoken/cost契約、Ed25519、exact SQLite nonce ledger、frozen attested judge、7-phase digest protocol、stdlib固定state machine、outer `--workflow` entry、7/7 actual handler、external approved manifest SHAとhuman-approved patch SHAに結ぶ `workflow-init` を実装した。rootless Podman hostへtrusted releaseと4 imageを配備し、credential/APIなしの `nonlive_ready` まで確認した
+- 目標: credential-free配備確認とlauncher user向けinitial requestを維持した上で、別途承認したlive 7-phase E2Eとnonce ledger長期運用を閉じる
+
+対象外:
+
+- 自動commit、push、merge
+- 検索アプリのUI、ブックマーク表示数、検索結果件数の変更
+- 削除済みPDFの復元または参照
+- Bonsai、Outscraper、Amazonへの実通信
+- 未コミットbootstrap変更自身を自己attest済みと扱うこと
+- 人間のcredential、送信内容、費用opt-inなしにOpenAI APIを起動すること
+
+完了条件:
+
+- [x] preflightがmanifestのPython inode/digest、harness、task、lock、schema、policy、public keyをimport前に固定する
+- [x] candidateを別UIDから変更不能なsnapshotとし、raw RED/GREEN/gateをnetworkなしrunnerで採取する
+- [x] root `.env.example` は空値検査後にsnapshotから除外し、共通credential pathとsecret-like contentを拒否する
+- [x] reviewer/adversaryをcandidateなし、toolなし、同じbounded packet、別fresh lifecycleで実行する契約を持つ
+- [x] broker/gatewayのnetwork分離、fixed egress、credential不在、raw inspect、cleanup/absenceを証拠化する
+- [x] `service_tier=default` の価格policy digest、544K/4.54 USD標準cap、1,088K/7.94 USD絶対cap、失敗attempt予約を固定する
+- [x] raw offline、2つのprovisioned broker lifecycle、frozen final ledger、Ed25519署名をattested judgeが再構築する
+- [x] `pass` を許しても `human_approval_required=true` を維持する
+- [x] 7つのphase、digest chain、consume-before-execute SQLite ledger、phase別mount制約を実装する
+- [x] external phaseのprepared payload/raw evidenceをexclusive保存し、brokerをhost SQLite削除後もfrozen ledgerから再構築できるようにする
+- [x] request/action/output/result/next requestをstdlib固定7-phase state machineで再検証する
+- [x] external launcherの `--workflow` をroot-owned outer 7-phase driverへ接続する
+- [x] inner `prepare|finalize` CLIとoffline/broker actual typed handlerを接続し、caller supplied descriptor/argv/unknown fieldを拒否する
+- [x] physical snapshotを一般artifactから分離した専用read-only mountへ渡し、semantic/physical SHA集合をexact照合する
+- [x] snapshot、red-snapshot、review-packetのactual workflow handlerを接続する
+- [x] broker committed evidenceからlive DBなしでsign/judge共通frozen input bundleを再構築する
+- [x] readiness gateが7/7 handlerの完全一致をcredential readとbroker ledger作成前に検査する
+- [x] `sign` actual workflow handlerをfrozen common bundleへ接続する
+- [x] attested judgeをfrozen common bundleだけからverdictへ接続し、host ledger削除後のpassと改ざん拒否を検証する
+- [x] exact nonce SQLite schema、file identity、sidecar拒否、atomic replay rollbackを回帰テストする
+- [x] external approved manifest SHA、TaskSpec v2、protected candidate、人手承認済みpatch SHAからsequence 1 requestを作るcredential-free `workflow-init` を実装する
+- [x] 4 digest-pinned imageをcredential/API/external networkなしで検査し、`production_e2e_complete=false` の `nonlive_ready` evidenceを出すdeployment checkを実装する
+- [x] 管理者承認の上で専用非rootuser、subuid/subgid、rootless Podman、trusted `/opt`、private `/var/lib` を用意する
+- [x] 人手監査済みclean commit、具体的TaskSpec v2 canary、外部承認済みmanifest SHA、4 image digestからroot-owned releaseを配備し、`--deployment-check` の `nonlive_ready` を実hostで確認する
+- [x] external manifest/patch anchorを再承認し、`ai-review` 所有のprivate artifact rootへlive launcherが読めるinitial requestを新規生成する
+- [ ] rootless Podman `keep-id` hostでtrusted releaseのfull 7-phase承認済みlive検証を行う
+- [x] offline全体pytest、Ruff、lock、diff、schema、Markdown、独立security reviewを最終確認する
+
+外部OpenAI APIのlive成功は、credentialと費用の人間承認がない限り完了条件にしない。その場合は未実行境界を明記し、コード/fixture検証と配備実績を区別する。
+
+2026-08-16の実配備では `ai-review` UID 1100、`amazon-candidate` UID 1101、ai-review専用subuid/subgid、rootless Podman 6.1、user namespace、seccompを確認した。clean base `dd4b6bde2bd2d7f3ebc67c5190949c1cc97652ee`、canary head `c603ec833e13f13bdce5af4e0b36f5917e0d4f98`、manifest SHA-256 `703d2e183558afe6e52198247888675d7f0b526f5082051a9ae75d5ea3a402ae` を `/opt/amazon-explorer-ai-review/releases/dd4b6bde2bd2d7f3ebc67c5190949c1cc97652ee` とprivate `/var/lib/amazon-explorer-ai-review` へ分離し、4 imageのlocal inspect/networkなしsmokeが `nonlive_ready` で成功した。package導入、public base image pull、image内package取得、4 image buildは実施したが、OpenAI credential/API、external network、live workflow、課金は未実行である。
+
+同じmanifest anchorとcanonical patch `a9d49bea2225a903fe693f913c1f8652cdea56d02b03355e17f472363ca3b715` を再照合し、local objectを共有しないUID 1100所有candidateから `/var/lib/amazon-explorer-ai-review/artifacts/TASK-CANARY-001-live-init-r2/phase-request.json` を生成した。directoryは0500、fileは0400、file SHA-256は `57266f318584f01dd0fc3cccf08a9e356db67371277e974393d7c8b91f42c706` であり、UID 1101からは読めない。これはcredential/APIを使わない初期化実績であり、live 7-phase成功ではない。
 
 ## 3. 更新規則
 

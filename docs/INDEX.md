@@ -9,6 +9,7 @@
 | アプリが満たす要件を確認する | [REQUIREMENTS.md](REQUIREMENTS.md) |
 | 現在できないこと・前提条件を確認する | [CONSTRAINTS.md](CONSTRAINTS.md) |
 | 全体構成とデータフローを理解する | [DESIGN.md](DESIGN.md) |
+| AIレビュー・ハーネスの実行可否、手順、推論量を確認する | [HARNESS-RUNBOOK.md](HARNESS-RUNBOOK.md) |
 
 ## 設計資料
 
@@ -26,6 +27,8 @@
 | 文書 | 使う場面 |
 |---|---|
 | [PLANS.md](PLANS.md) | 長時間・複雑タスクのExecution Planを作成・更新するとき |
+| [EXEC-001](plans/EXEC-001-AI-REVIEW-TDD-HARNESS.md) | 安全側MVPのbootstrap経緯とTDDパイロットを確認するとき |
+| [EXEC-002](plans/EXEC-002-ATTESTED-AI-REVIEW-BOUNDARIES.md) | attested境界、workflow初期化、credential-free deployment check、typed outer protocol、frozen sign/judge、7/7 readiness、nonce契約・配備条件を確認するとき |
 | [TASKS.md](TASKS.md) | 複数工程を持つ大規模タスクを管理するとき |
 | [TODO.md](TODO.md) | 単独で完了できる小規模タスクを管理するとき |
 | [TECH-DEBT-TRACKER.md](TECH-DEBT-TRACKER.md) | 実装済みだが将来の保守性や運用性に負債がある項目を追跡するとき |
@@ -38,13 +41,14 @@
 | 文書 | 内容 |
 |---|---|
 | [REFERENCES.md](REFERENCES.md) | リポジトリ内の一次資料と外部公式資料 |
-| [AI_GUIDE.md](AI_GUIDE.md) | 将来のAI向け指示用。現在は意図的に空 |
+| [AI_GUIDE.md](AI_GUIDE.md) | TaskSpec v2、external manifest/patch anchor、TDD、snapshot、raw evidence、2役broker/frozen ledger、frozen judge、nonce、署名、人間承認の強制規約 |
+| [HARNESS-RUNBOOK.md](HARNESS-RUNBOOK.md) | host診断、rootless Podman準備、検証済みrelease binding、workflow初期化、credential-free deployment check実績、7-phase workflow、終了コード、モデル・token・費用運用 |
 
 ## 文書の役割分担
 
-- 現在の実装事実は `src/`、`tests/`、`pyproject.toml`、`.env.example` を正とする。
+- 現在の実装事実は `src/`、`tools/`、`tests/`、`specs/`、`pyproject.toml`、`.env.example` を正とする。
 - `REQUIREMENTS.md` は満たすべき振る舞い、`CONSTRAINTS.md` は前提と限界を記録する。
-- `DESIGN.md` は採用した設計を記録し、未実装の候補は実装済みと混同しない。
+- `DESIGN.md` は採用した設計を記録し、計画中の候補は実装済みと混同しない。
 - `ISSUES.md` は観測された問題、`TECH-DEBT-TRACKER.md` は既知の構造的負債を扱う。
 - `TODO.md` は小規模作業、`TASKS.md` は複数工程の成果、`PLANS.md` は複雑タスクの遂行方法を扱う。
 - `MEMORY.md` は安定した知識だけを残し、日々の進捗は `WORKLOG.md` へ記録する。
@@ -73,6 +77,7 @@
 | キャッシュキー・TTL・保存形式 | `DESIGN.md`、`DB-SCHEMA.md`、`SECURITY.md` |
 | 既知の制限または不具合 | `CONSTRAINTS.md`、`ISSUES.md`、必要に応じて `TECH-DEBT-TRACKER.md` |
 | 大規模な将来作業 | `TASKS.md`。着手時は `PLANS.md` に従ってExecution Planを作る |
+| AIレビュー、TDD証拠、ハーネス契約 | `AI_GUIDE.md`、`HARNESS-RUNBOOK.md`、対応する `docs/plans/`、`SECURITY.md` |
 
 ## 検証
 
@@ -87,5 +92,5 @@ git diff --check
 ```sh
 uv run ruff check .
 uv run ruff format --check .
-uv run pytest
+uv run pytest -m 'not live_api'
 ```

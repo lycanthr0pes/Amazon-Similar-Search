@@ -4,7 +4,7 @@
 
 Execution Plan（以下、Plan）は、長時間または複雑な変更を、会話履歴に依存せず引き継ぎ・再開・検証できる状態に保つための実行文書である。単なる予定表ではなく、現在地、判断、検証結果、残作業を一つの文書に集約する。
 
-大規模タスクの一覧は [TASKS.md](TASKS.md)、短時間で完結する作業は [TODO.md](TODO.md)、確認済みの問題は [ISSUES.md](ISSUES.md) で管理する。Plan は `TASKS.md` の項目を実行へ移す際に作成する詳細記録であり、タスク一覧そのものの代替ではない。
+大規模タスクの一覧は [TASKS.md](TASKS.md)、短時間で完結する作業は [TODO.md](TODO.md)、確認済みの問題は [ISSUES.md](ISSUES.md) で管理する。Plan は `TASKS.md` の項目を実行へ移す際に作成する詳細記録であり、タスク一覧そのものの代替ではない。AIを使う変更では [AI_GUIDE.md](AI_GUIDE.md) の証拠・役割分離規約も適用する。
 
 ## 2. Plan が必要な変更
 
@@ -21,7 +21,7 @@ Execution Plan（以下、Plan）は、長時間または複雑な変更を、�
 
 ## 3. 保存と識別
 
-詳細Planを新設する場合は `docs/plans/<task-id>-<短い名前>.md` に置き、`TASKS.md` の対応項目から相対リンクする。`docs/plans/` は現時点では作成されていないため、最初のPlan追加時に作成する。
+詳細Planは `docs/plans/<task-id>-<短い名前>.md` に置き、`TASKS.md` の対応項目から相対リンクする。最初の完了済みPlanは [EXEC-001: AI相互レビューとTDDハーネスの導入](plans/EXEC-001-AI-REVIEW-TDD-HARNESS.md) である。
 
 各Planには、少なくとも次の識別情報を記載する。
 
@@ -69,7 +69,7 @@ Planだけを読んだ作業者が、現在のリポジトリから安全に作�
 ```sh
 uv run ruff check .
 uv run ruff format --check .
-uv run pytest
+uv run pytest -m 'not live_api'
 git diff --check
 ```
 
@@ -84,6 +84,8 @@ git diff --check
 - 外部APIを実際に呼んだかどうか
 
 「テスト済み」は、実行対象と結果を示せる場合だけ使う。文書やモックだけの確認を実サービス確認として扱わない。
+
+振る舞いを変更するTDDでは、実装前のREDと実装後のGREENについて、コマンド、終了状態、失敗理由、テストファイルのSHA-256を残す。決定論的ゲートをAIの意味レビューより先に実行する。`live_api` はmarkerと `--run-live-api` の二重opt-inとし、外部通信・シークレット・費用はそれだけで承認されたものと扱わない。詳細は [AI_GUIDE.md](AI_GUIDE.md) を参照する。
 
 ## 7. 判断記録
 
@@ -179,7 +181,7 @@ Planを `完了` にできるのは、次をすべて満たした場合である
 | 対象 | コマンドまたは方法 | 期待結果 | 実結果 |
 |---|---|---|---|
 | 静的解析 | `uv run ruff check .` | 違反0件 | 未実行 |
-| テスト | `uv run pytest` | 全件成功 | 未実行 |
+| テスト | `uv run pytest -m 'not live_api'` | 全件成功 | 未実行 |
 
 ## セキュリティ・データ・互換性
 

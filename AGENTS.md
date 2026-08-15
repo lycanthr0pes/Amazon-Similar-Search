@@ -29,10 +29,15 @@
 - [`docs/WORKLOG.md`](docs/WORKLOG.md)
 - [`docs/MEMORY.md`](docs/MEMORY.md)
 - [`docs/AI_GUIDE.md`](docs/AI_GUIDE.md)
+- [`docs/HARNESS-RUNBOOK.md`](docs/HARNESS-RUNBOOK.md)
+- [`docs/plans/EXEC-001-AI-REVIEW-TDD-HARNESS.md`](docs/plans/EXEC-001-AI-REVIEW-TDD-HARNESS.md)
+- [`docs/plans/EXEC-002-ATTESTED-AI-REVIEW-BOUNDARIES.md`](docs/plans/EXEC-002-ATTESTED-AI-REVIEW-BOUNDARIES.md)
 
 ## 実行時アセット
 
 - [`src/clients/bonsai_prompt.md`](src/clients/bonsai_prompt.md)
+- [`specs/prompts/reviewer.md`](specs/prompts/reviewer.md)
+- [`specs/prompts/adversary.md`](specs/prompts/adversary.md)
 
 ## 旧検証資料
 
